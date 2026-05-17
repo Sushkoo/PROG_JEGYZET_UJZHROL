@@ -27,12 +27,19 @@ public:
     //destruktor - VIRTUAL kell ha orokoltetsz
     virtual ~Product() = default;
 
-    void akcio(int datum) {
+    void akcio(unsigned int datum) {
+        // Csak akkor vonunk ki, ha a lejarat a nagyobb (nem csordul alul a kivonás),
+        // VAGY ha le akarod értékelni a már lejártakat is, akkor sima int-be kell kényszeríteni a kivonást.
 
-        if ((lejarat - datum) < 3)
-            ar /= (1 - (rand() / RAND_MAX) * 0.1 + 0.05);
+        // Biztonságos feltétel: még nem járt le, ÉS 3 napon belül le fog járni
+        if (lejarat > datum && (lejarat - datum) < 3) {
 
-        cout << "Uj akcios ar: " << ar << endl;
+            // Itt a (float) kényszeríti a C++-t, hogy törtszámos osztást csináljon!
+            // Illetve visszatettem a *= (szorzás) jelet, hogy tényleg olcsóbb legyen.
+            ar /= (1.0f - ((float)rand() / RAND_MAX) * 0.1f + 0.05f);
+
+            cout << "Uj akcios ar: " << ar << " Ft" << endl;
+        }
     }
 
     //ezzel lehet fajlba és console-ra irni
