@@ -222,29 +222,39 @@ int main()
 
         string sor;
         while (getline(beolvaso, sor)) {
-            stringstream ss(sor);
-            string beKategoria, beTermeknev, beLejaratStr, beArStr;
+            // 1. VÉDELEM: Ha üres a sor, ugorjuk át (így nem omlik össze a stoi/stof)
+            if (sor.empty()) {
+                continue;
+            }
 
-        //sor darabolasa vesszovel
-            getline(ss, beKategoria, ',');
-            getline(ss, beTermeknev, ',');
-            getline(ss, beLejaratStr, ',');
-            getline(ss, beArStr, ',');
+            // 2. DARABOLÁS STRINGSTREAM NÉLKÜL
+            size_t pos1 = sor.find(',');
+            size_t pos2 = sor.find(',', pos1 + 1);
+            size_t pos3 = sor.find(',', pos2 + 1);
 
+            // Ha hiányzik vesszõ (hibás a sor formátuma), ugorjuk át
+            if (pos1 == string::npos || pos2 == string::npos || pos3 == string::npos) {
+                continue;
+            }
 
-            //szoveget-szamma (stoi: string-to-int, stof: string to float) 
+            string beKategoria = sor.substr(0, pos1);
+            string beTermeknev = sor.substr(pos1 + 1, pos2 - pos1 - 1);
+            string beLejaratStr = sor.substr(pos2 + 1, pos3 - pos2 - 1);
+            string beArStr = sor.substr(pos3 + 1);
+
+            // Szöveget számmá
             unsigned int beLejarat = stoi(beLejaratStr);
             float beAr = stof(beArStr);
 
-            //object letrehozasa es vektorba rakas
+            // Objektum létrehozása és vektorba rakás
             Product ujTermek(beKategoria, beTermeknev, beLejarat, beAr);
             termekekLista.push_back(ujTermek);
         }
         beolvaso.close();
-        cout << "Sikeresen beolvasta" << termekekLista.size() << "db termek van a listaban" << endl;
+        cout << "Sikeresen beolvasta, " << termekekLista.size() << " db termek van a listaban" << endl;
     }
     catch (const exception& e) {
-        cerr << "Kivetel tortent: " << e.what() << endl;
+        cerr << "Kivetel tortent a beolvasaskor: " << e.what() << endl;
         return 1;
     }
 
@@ -286,7 +296,7 @@ int main()
             cout << kivalasztottTermekek.size() << " db termek kivalasztva ebbol a kategoriabol." << endl;
         }
         else {
-            //VEGSO ELSE ha nem szõr megkapja az osszeset
+            //nincs szûrés
             kivalasztottTermekek = termekekLista;
         }
     }
@@ -297,6 +307,7 @@ int main()
 
     // ----- 3 KIIRAS (SZOVEGES VAGY BINARISBA)
 
+
     if (!kivalasztottTermekek.empty()) {
         try {
             string kimenetiFajlnev = "kivalasztott_" + bemenetiFajlnev;
@@ -305,7 +316,7 @@ int main()
             cin >> mod;
 
             if (mod == "binaris") {
-                //ios:binary flag a binarishoz
+                // Bináris mentés
                 ofstream kimenet(kimenetiFajlnev + ".bin", ios::binary);
                 if (!kimenet.is_open()) throw runtime_error("Nem lehet megnyitni a kimeneti binaris fajlt");
 
@@ -315,9 +326,23 @@ int main()
                 kimenet.close();
                 cout << "Sikeresen mentettem a BINARIS formatumba a " << kimenetiFajlnev << ".bin fajlba" << endl;
             }
+            else if (mod == "txt") {
+                ofstream kimenet(kimenetiFajlnev);
+                if (!kimenet.is_open()) throw runtime_error("Nem lehet megnyitni a kimeneti txt fajlt");
+
+                for (const auto& termek : kivalasztottTermekek) {
+                    termek.kiir(kimenet);
+                    kimenet << endl; // Sortörés kell a txt fájlba
+                }
+                kimenet.close();
+                cout << "Sikeresen mentettem a SZOVEGES formatumba a " << kimenetiFajlnev << " fajlba" << endl;
+            }
+            else {
+                cout << "Ismeretlen formatum, nem tortent mentes." << endl;
+            }
         }
         catch (const exception& e) {
-            cerr << "Kivetel tortent: " << e.what() << endl;
+            cerr << "Kivetel tortent a menteskor: " << e.what() << endl;
         }
     }
     else {
