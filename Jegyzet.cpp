@@ -24,8 +24,8 @@ public:
     //alapertelmezett konstruktor
     Product() = default;
 
-    //destruktor
-    ~Product() = default;
+    //destruktor - VIRTUAL kell ha orokoltetsz
+    virtual ~Product() = default;
 
     void akcio(int datum) {
 
